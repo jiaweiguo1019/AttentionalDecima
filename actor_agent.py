@@ -144,6 +144,8 @@ class ActorAgent(Agent):
 
         # actor gradients
         self.act_gradients = tf.gradients(self.act_loss, self.params)
+#         self.act_gradients = [tf.clip_by_value(grad, -5.0, 5.0)
+#             for grad in self.act_gradients]
 
         # adaptive learning rate
         self.lr_rate = tf.placeholder(tf.float32, shape=[])
@@ -154,6 +156,7 @@ class ActorAgent(Agent):
         # apply gradient directly to update parameters
         self.apply_grads = self.optimizer(self.lr_rate).\
             apply_gradients(zip(self.act_gradients, self.params))
+        
 
         # network paramter saver
         self.saver = tf.train.Saver(max_to_keep=args.num_saved_models)
@@ -402,6 +405,14 @@ class ActorAgent(Agent):
                 # number of tasks left
                 node_inputs[node_idx, 4] = \
                     (node.num_tasks - node.next_task_idx) / 200.0
+                
+                #node in-degree
+                node_inputs[node_idx, 5] = \
+                    len(node.parent_nodes) / 3.0
+                
+                # node out-degree
+                node_inputs[node_idx, 6] = \
+                    len(node.child_nodes) / 2.0
 
                 node_idx += 1
 

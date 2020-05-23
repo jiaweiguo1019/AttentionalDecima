@@ -83,8 +83,10 @@ parser.add_argument('--canvas_base', type=int, default=-10,
                     help='Canvas color scale bottom (default: -10)')
 
 # -- Learning --
-parser.add_argument('--node_input_dim', type=int, default=5,
-                    help='node input dimensions to graph embedding (default: 5)')
+# parser.add_argument('--node_input_dim', type=int, default=5,
+#                     help='node input dimensions to graph embedding (default: 5)')
+parser.add_argument('--node_input_dim', type=int, default=7,
+                    help='node input dimensions to graph embedding (default: 7)')
 parser.add_argument('--job_input_dim', type=int, default=3,
                     help='job input dimensions to graph embedding (default: 3)')
 parser.add_argument('--hid_dims', type=int, default=[16, 8], nargs='+',
@@ -144,4 +146,11 @@ parser.add_argument('--num_saved_models', type=int, default=1000,
 parser.add_argument('--scheduler_type', type=str, default='dynamic_partition',
                     help='type of scheduling algorithm (default: dynamic_partition)')
 
+# -- Num of Heads in Attention --
+parser.add_argument('--num_heads', type=int, default=4,
+                    help='Number of heads in attention mechanisem (default: 4)')
+
 args = parser.parse_args()
+
+# MSG_MATS = {}
+# MSG_MASKS = {}

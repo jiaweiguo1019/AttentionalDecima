@@ -1,5 +1,5 @@
 import os
-# os.environ['CUDA_VISIBLE_DEVICES']=''
+# os.environ['CUDA_VISIBLE_DEVICES']='3'
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import time
 import numpy as np
@@ -268,7 +268,10 @@ def main():
     reset_prob = args.reset_prob
 
     # ---- start training process ----
-    for ep in range(1, args.num_ep):
+    for ep in range(1, args.num_ep + 1):
+#
+    # for ep in range(1, args.num_ep):
+#
         print('training epoch', ep)
 
         # synchronize the model parameters for each training agent
@@ -298,6 +301,9 @@ def main():
 
             if result is None:
                 any_agent_panic = True
+#
+                # print('agent {} is panic!!!'.format(i))
+#
                 continue
             else:
                 batch_reward, batch_time, \
@@ -321,6 +327,9 @@ def main():
         print('got reward from workers', t2 - t1, 'seconds')
 
         if any_agent_panic:
+#
+            # print('any_agent_panic!!!!')
+#
             # The try condition breaks in some agent (should
             # happen rarely), throw out this rollout and try
             # again for next iteration (TODO: log this event)

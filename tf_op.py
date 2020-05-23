@@ -32,28 +32,28 @@ def expand_act_on_state(state, sub_acts):
 def glorot(shape, dtype=tf.float32, scope='default'):
     # Xavier Glorot & Yoshua Bengio (AISTATS 2010) initialization (Eqn 16)
     with tf.variable_scope(scope):
-        init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
+        init_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
         init = tf.random_uniform(
             shape, minval=-init_range, maxval=init_range, dtype=dtype)
         return tf.Variable(init)
 
 
 def leaky_relu(features, alpha=0.2, name=None):
-  """Compute the Leaky ReLU activation function.
-  "Rectifier Nonlinearities Improve Neural Network Acoustic Models"
-  AL Maas, AY Hannun, AY Ng - Proc. ICML, 2013
-  http://web.stanford.edu/~awni/papers/relu_hybrid_icml2013_final.pdf
-  Args:
-    features: A `Tensor` representing preactivation values.
-    alpha: Slope of the activation function at x < 0.
-    name: A name for the operation (optional).
-  Returns:
-    The activation value.
-  """
-  with ops.name_scope(name, "LeakyRelu", [features, alpha]):
-    features = ops.convert_to_tensor(features, name="features")
-    alpha = ops.convert_to_tensor(alpha, name="alpha")
-    return math_ops.maximum(alpha * features, features)
+    """Compute the Leaky ReLU activation function.
+    "Rectifier Nonlinearities Improve Neural Network Acoustic Models"
+    AL Maas, AY Hannun, AY Ng - Proc. ICML, 2013
+    http://web.stanford.edu/~awni/papers/relu_hybrid_icml2013_final.pdf
+    Args:
+        features: A `Tensor` representing preactivation values.
+        alpha: Slope of the activation function at x < 0.
+        name: A name for the operation (optional).
+    Returns:
+        The activation value.
+    """
+    with ops.name_scope(name, "LeakyRelu", [features, alpha]):
+        features = ops.convert_to_tensor(features, name="features")
+        alpha = ops.convert_to_tensor(alpha, name="alpha")
+        return math_ops.maximum(alpha * features, features)
 
 
 def masked_outer_product(a, b, mask):
