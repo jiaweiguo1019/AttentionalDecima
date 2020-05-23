@@ -51,7 +51,7 @@ def leaky_relu(features, alpha=0.2, name=None):
     with tf.name_scope(name, "LeakyRelu", [features, alpha]):
         features = tf.convert_to_tensor(features, name="features")
         alpha = tf.convert_to_tensor(alpha, name="alpha")
-        return tf.maximun(alpha * features, features)
+        return tf.math.maximun(alpha * features, features)
 
 
 def masked_outer_product(a, b, mask):
