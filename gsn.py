@@ -109,6 +109,7 @@ class GraphSNN(object):
             rnn_outputs, rnn_states = tf.nn.dynamic_rnn(
                 self.cell, s, initial_state=initial_state,
                 dtype=tf.float32, time_major=False)
+        s = tf.transpose(rnn_outputs, [1, 0, 2])[-1]
 #
         # used when the sequence length is not identical
         # batch_size = tf.shape(rnn_outputs)[0]
