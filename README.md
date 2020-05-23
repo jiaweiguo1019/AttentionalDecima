@@ -4,6 +4,14 @@ Learning Graph-based Cluster Scheduling Algorithms via Attention Mechanism
 
 this work is inspired by [Decima](https://web.mit.edu/decima) (SIGCOMM '19) 
 
+## Dependencies
+
+The script has been tested running under Python 3.6, with the following packages installed (along with their dependencies):
+
+- `numpy==1.16`
+- `networkx==2.4`
+- `tensorflow-gpu==1.15`
+
 Example:
 
 Train Attentional Decima with 50 executors, 200 streaming jobs, 25 second Poisson job arrival interval (load ~85%), stochastic termination, input-dependent baseline and average reward, run
