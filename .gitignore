@@ -1,3 +1,12 @@
+# ignore results, models and some misc data 
+results/
+models/
+spark_env/tpch/dag_visualization/
+spark_env/tpch/task_durations/
+
+# ignore mac cache
+*.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
