@@ -151,6 +151,3 @@ parser.add_argument('--num_heads', type=int, default=4,
                     help='Number of heads in attention mechanisem (default: 4)')
 
 args = parser.parse_args()
-
-# MSG_MATS = {}
-# MSG_MASKS = {}
