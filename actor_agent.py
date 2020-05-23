@@ -405,7 +405,8 @@ class ActorAgent(Agent):
                 # number of tasks left
                 node_inputs[node_idx, 4] = \
                     (node.num_tasks - node.next_task_idx) / 200.0
-                
+
+#
                 #node in-degree
                 node_inputs[node_idx, 5] = \
                     len(node.parent_nodes) / 3.0
@@ -413,6 +414,7 @@ class ActorAgent(Agent):
                 # node out-degree
                 node_inputs[node_idx, 6] = \
                     len(node.child_nodes) / 2.0
+#
 
                 node_idx += 1
 
