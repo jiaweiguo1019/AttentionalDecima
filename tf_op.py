@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
 
 
 def expand_act_on_state(state, sub_acts):
@@ -48,10 +50,10 @@ def leaky_relu(features, alpha=0.2, name=None):
     Returns:
         The activation value.
     """
-    with tf.name_scope(name, "LeakyRelu", [features, alpha]):
-        features = tf.convert_to_tensor(features, name="features")
-        alpha = tf.convert_to_tensor(alpha, name="alpha")
-        return tf.maximum(alpha * features, features)
+    with ops.name_scope(name, "LeakyRelu", [features, alpha]):
+        features = ops.convert_to_tensor(features, name="features")
+        alpha = ops.convert_to_tensor(alpha, name="alpha")
+    return math_ops.maximum(alpha * features, features)
 
 
 def masked_outer_product(a, b, mask):
