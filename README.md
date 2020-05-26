@@ -1,8 +1,8 @@
 # Attentional Decima
 
-Learning Graph-based Cluster Scheduling Algorithms via Attention Mechanism
+Learning Graph-based Cluster Scheduling Algorithms via Graph Attention Mechanism
 
-this work is inspired by [Decima](https://web.mit.edu/decima) (SIGCOMM '19) 
+this work is inspired by [Decima](https://web.mit.edu/decima) (SIGCOMM '19)
 
 ## Dependencies
 
