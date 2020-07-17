@@ -17,14 +17,14 @@ class TFLogger(object):
         self.summary_ops = tf.summary.merge_all()
 
         self.writer = tf.summary.FileWriter(
-            args.result_folder + args.model_folder + \
+            args.result_folder + args.model_folder +
             strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     def log(self, ep, values):
         assert len(self.summary_vars) == len(values)
 
-        feed_dict = {self.summary_vars[i]: values[i] \
-            for i in range(len(values))}
+        feed_dict = {self.summary_vars[i]: values[i]
+                     for i in range(len(values))}
 
         summary_str = self.sess.run(
             self.summary_ops, feed_dict=feed_dict)
