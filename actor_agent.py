@@ -425,8 +425,7 @@ class ActorAgent(Agent):
                exec_commit, moving_executors, \
                exec_map, action_map
 
-    def get_valid_masks(self, job_dags, frontier_nodes,
-            source_job, num_source_exec, exec_map, action_map):
+    def get_valid_masks(self, job_dags, frontier_nodes, source_job, num_source_exec, exec_map, action_map):
 
         job_valid_mask = np.zeros([1, \
             len(job_dags) * len(self.executor_levels)])
@@ -449,8 +448,7 @@ class ActorAgent(Agent):
             assert least_exec_amount <= self.executor_levels[-1] + 1
 
             # find the index for first valid executor limit
-            exec_level_idx = bisect.bisect_left(
-                self.executor_levels, least_exec_amount)
+            exec_level_idx = bisect.bisect_left(self.executor_levels, least_exec_amount)
 
             if exec_level_idx >= len(self.executor_levels):
                 job_valid[job_dag] = False
@@ -462,8 +460,7 @@ class ActorAgent(Agent):
 
             base += self.executor_levels[-1]
 
-        total_num_nodes = int(np.sum(
-            job_dag.num_nodes for job_dag in job_dags))
+        total_num_nodes = int(np.sum(job_dag.num_nodes for job_dag in job_dags))
 
         node_valid_mask = np.zeros([1, total_num_nodes])
 

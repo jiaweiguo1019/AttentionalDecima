@@ -376,8 +376,7 @@ def main():
 
             actor_gradients.append(actor_gradient)
             all_action_loss.append(loss[0])
-            all_entropy.append(-loss[1] / \
-                float(all_cum_reward[i].shape[0]))
+            all_entropy.append(-loss[1] /  float(all_cum_reward[i].shape[0]))
             all_value_loss.append(loss[2])
 
         t4 = time.time()

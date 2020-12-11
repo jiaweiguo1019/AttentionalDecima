@@ -23,8 +23,7 @@ def load_job(file_path, query_size, query_idx, wall_time, np_random):
         task_duration = task_durations[n]
         e = next(iter(task_duration['first_wave']))
 
-        num_tasks = len(task_duration['first_wave'][e]) + \
-                    len(task_duration['rest_wave'][e])
+        num_tasks = len(task_duration['first_wave'][e]) + len(task_duration['rest_wave'][e])
 
         # remove fresh duration from first wave duration
         # drag nearest neighbor first wave duration to empty spots
@@ -117,8 +116,7 @@ def generate_tpch_jobs(np_random, timeline, wall_time):
         query_idx = str(np_random.randint(args.tpch_num) + 1)
         query_size = args.tpch_size[np_random.randint(len(args.tpch_size))]
         # generate job
-        job_dag = load_job(
-            args.job_folder, query_size, query_idx, wall_time, np_random)
+        job_dag = load_job(args.job_folder, query_size, query_idx, wall_time, np_random)
         # job already arrived, put in job_dags
         job_dag.start_time = t
         job_dag.arrived = True
@@ -131,8 +129,7 @@ def generate_tpch_jobs(np_random, timeline, wall_time):
         query_size = args.tpch_size[np_random.randint(len(args.tpch_size))]
         query_idx = str(np_random.randint(args.tpch_num) + 1)
         # generate job
-        job_dag = load_job(
-            args.job_folder, query_size, query_idx, wall_time, np_random)
+        job_dag = load_job(args.job_folder, query_size, query_idx, wall_time, np_random)
         # push into timeline
         job_dag.start_time = t
         timeline.push(t, job_dag)
@@ -143,9 +140,6 @@ def generate_tpch_jobs(np_random, timeline, wall_time):
 def generate_jobs(np_random, timeline, wall_time):
     if args.query_type == 'tpch':
         job_dags = generate_tpch_jobs(np_random, timeline, wall_time)
-
-    elif args.query_type == 'alibaba':
-        job_dags = generate_alibaba_jobs(np_random, timeline, wall_time)
 
     else:
         print('Invalid query type ' + args.query_type)

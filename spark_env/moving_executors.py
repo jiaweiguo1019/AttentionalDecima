@@ -47,5 +47,5 @@ class MovingExecutors(object):
             del self.node_track[node]
 
     def reset(self):
-       self.moving_executors = {}
-       self.node_track = {}
+        self.moving_executors = {}
+        self.node_track = {}

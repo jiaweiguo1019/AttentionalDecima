@@ -10,8 +10,8 @@ class WallTime(object):
     def update_time(self, new_time):
         self.curr_time = new_time
 
-    def increment_time(self, tick):
-        self.curr_time += tick
-
     def reset(self):
         self.curr_time = 0.0
+
+#    def increment_time(self, tick):
+#        self.curr_time += tick

@@ -20,9 +20,6 @@ class JobDAG(object):
         self.num_nodes = len(self.nodes)
         self.num_nodes_done = 0
 
-        # set of executors currently running on the job
-        self.executors = OrderedSet()
-
         # the computation graph needs to be a DAG
         assert is_dag(self.num_nodes, self.adj_mat)
 
@@ -31,6 +28,9 @@ class JobDAG(object):
         for node in self.nodes:
             if node.is_schedulable():
                 self.frontier_nodes.add(node)
+
+        # set of executors currently running on the job
+        self.executors = OrderedSet()
 
         # assign job dag to node
         self.assign_job_dag_to_node()
@@ -48,8 +48,7 @@ class JobDAG(object):
         self.completion_time = np.inf
 
         # map a executor number to an interval
-        self.executor_interval_map = \
-            self.get_executor_interval_map()
+        self.executor_interval_map = self.get_executor_interval_map()
 
     def assign_job_dag_to_node(self):
         for node in self.nodes:
@@ -61,40 +60,22 @@ class JobDAG(object):
 
         # get the left most map
         for e in range(args.executor_data_point[0] + 1):
-            executor_interval_map[e] = \
-                (args.executor_data_point[0],
-                 args.executor_data_point[0])
+            executor_interval_map[e] = (args.executor_data_point[0], args.executor_data_point[0])
 
         # get the center map
         for i in range(len(args.executor_data_point) - 1):
-            for e in range(args.executor_data_point[i] + 1,
-                            args.executor_data_point[i + 1]):
-                executor_interval_map[e] = \
-                    (args.executor_data_point[i],
-                     args.executor_data_point[i + 1])
+            for e in range(args.executor_data_point[i] + 1, args.executor_data_point[i + 1]):
+                executor_interval_map[e] = (args.executor_data_point[i], args.executor_data_point[i + 1])
             # at the data point
             e = args.executor_data_point[i + 1]
-            executor_interval_map[e] = \
-                (args.executor_data_point[i + 1],
-                 args.executor_data_point[i + 1])
+            executor_interval_map[e] = (args.executor_data_point[i + 1], args.executor_data_point[i + 1])
 
         # get the residual map
         if args.exec_cap > args.executor_data_point[-1]:
-            for e in range(args.executor_data_point[-1] + 1,
-                            args.exec_cap + 1):
-                executor_interval_map[e] = \
-                    (args.executor_data_point[-1],
-                     args.executor_data_point[-1])
+            for e in range(args.executor_data_point[-1] + 1, args.exec_cap + 1):
+                executor_interval_map[e] = (args.executor_data_point[-1], args.executor_data_point[-1])
 
         return executor_interval_map
-
-    def get_nodes_duration(self):
-        # Warning: this is slow O(num_nodes * num_tasks)
-        # get the duration over all nodes
-        duration = 0
-        for node in self.nodes:
-            duration += node.get_node_duration()
-        return duration
 
     def reset(self):
         for node in self.nodes:
@@ -118,68 +99,13 @@ class JobDAG(object):
                     frontier_nodes_changed = True
         return frontier_nodes_changed
 
-
-def merge_job_dags(job_dags):
-    # merge all DAGs into a general big DAG
-    # this function will modify the original data structure
-    # 1. take nodes from the natural order
-    # 2. wire the parent and children across DAGs
-    # 3. reconstruct adj_mat by properly connecting
-    # the new edges among individual adj_mats
-
-    total_num_nodes = sum([d.num_nodes for d in job_dags])
-    nodes = []
-    adj_mat = np.zeros([total_num_nodes, total_num_nodes])
-
-    base = 0  # for figuring out new node index
-    leaf_nodes = []  # leaf nodes in the current job_dag
-
-    for job_dag in job_dags:
-
-        num_nodes = job_dag.num_nodes
-
-        for n in job_dag.nodes:
-            n.idx += base
-            nodes.append(n)
-
-        # update the adj matrix
-        adj_mat[base : base + num_nodes, \
-            base : base + num_nodes] = job_dag.adj_mat
-
-        # fundamental assumption of spark --
-        # every job ends with a single final stage
-        if base != 0:  # at least second job
-            for i in range(num_nodes):
-                if np.sum(job_dag.adj_mat[:, i]) == 0:
-                    assert len(job_dag.nodes[i].parent_nodes) == 0
-                    adj_mat[base - 1, base + i] = 1
-
-        # store a set of new root nodes
-        root_nodes = []
-        for n in job_dag.nodes:
-            if len(n.parent_nodes) == 0:
-                root_nodes.append(n)
-
-        # connect the root nodes with leaf nodes
-        for root_node in root_nodes:
-            for leaf_node in leaf_nodes:
-                leaf_node.child_nodes.append(root_node)
-                root_node.parent_nodes.append(leaf_node)
-
-        # store a set of new leaf nodes
-        leaf_nodes = []
-        for n in job_dag.nodes:
-            if len(n.child_nodes) == 0:
-                leaf_nodes.append(n)
-
-        # update base
-        base += num_nodes
-
-    assert len(nodes) == adj_mat.shape[0]
-
-    merged_job_dag = JobDAG(nodes, adj_mat)
-
-    return merged_job_dag
+#    def get_nodes_duration(self):
+#        # Warning: this is slow O(num_nodes * num_tasks)
+#        # get the duration over all nodes
+#        duration = 0
+#        for node in self.nodes:
+#            duration += node.get_node_duration()
+#        return duration
 
 
 class JobDAGDuration(object):
@@ -188,8 +114,7 @@ class JobDAGDuration(object):
     def __init__(self, job_dag):
         self.job_dag = job_dag
 
-        self.node_durations = \
-            {node: NodeDuration(node) for node in self.job_dag.nodes}
+        self.node_durations = {node: NodeDuration(node) for node in self.job_dag.nodes}
 
         for node in self.job_dag.nodes:
             # initialize descendant nodes duration

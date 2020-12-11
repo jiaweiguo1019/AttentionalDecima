@@ -174,8 +174,7 @@ class Environment(object):
         source = executor.job_dag if executor.node is None else executor.node
 
         # schedule executors from the source until the commitment is fulfilled
-        while len(self.exec_commit[source]) > 0 and \
-              len(self.exec_to_schedule) > 0:
+        while len(self.exec_commit[source]) > 0 and len(self.exec_to_schedule) > 0:
 
             # keep fulfilling the commitment using free executors
             node = self.exec_commit.pop(source)
@@ -188,8 +187,7 @@ class Environment(object):
             if node is None:
                 # the next node is explicitly silent, make executor ilde
                 if executor.job_dag is not None and \
-                   any([not n.no_more_tasks for n in \
-                        executor.job_dag.nodes]):
+                   any([not n.no_more_tasks for n in executor.job_dag.nodes]):
                     # mark executor as idle in its original job
                     self.free_executors.add(executor.job_dag, executor)
                 else:
@@ -211,8 +209,7 @@ class Environment(object):
 
                 else:
                     # need to move executor
-                    self.timeline.push(
-                        self.wall_time.curr_time + args.moving_delay, executor)
+                    self.timeline.push(self.wall_time.curr_time + args.moving_delay, executor)
                     # keep track of moving executors
                     self.moving_executors.add(executor, node)
 
@@ -296,11 +293,9 @@ class Environment(object):
                 self.action_map = compute_act_map(self.job_dags)
                 # assign free executors (if any) to the new job
                 if len(self.free_executors[None]) > 0:
-                    self.exec_to_schedule = \
-                        OrderedSet(self.free_executors[None])
+                    self.exec_to_schedule = OrderedSet(self.free_executors[None])
                     self.source_job = None
-                    self.num_source_exec = \
-                        len(self.free_executors[None])
+                    self.num_source_exec = len(self.free_executors[None])
 
             elif isinstance(obj, Executor):  # executor arrival event
                 executor = obj
@@ -332,17 +327,14 @@ class Environment(object):
                 exit(1)
 
         # compute reward
-        reward = self.reward_calculator.get_reward(
-            self.job_dags, self.wall_time.curr_time)
+        reward = self.reward_calculator.get_reward(self.job_dags, self.wall_time.curr_time)
 
         # no more decision to make, jobs all done or time is up
         done = (self.num_source_exec == 0) and \
-               ((len(self.timeline) == 0) or \
-               (self.wall_time.curr_time >= self.max_time))
+               ((len(self.timeline) == 0) or (self.wall_time.curr_time >= self.max_time))
 
         if done:
-            assert self.wall_time.curr_time >= self.max_time or \
-                   len(self.job_dags) == 0
+            assert self.wall_time.curr_time >= self.max_time or len(self.job_dags) == 0
 
         return self.observe(), reward, done
 
@@ -369,8 +361,7 @@ class Environment(object):
             executor.reset()
         self.free_executors.reset(self.executors)
         # generate a set of new jobs
-        self.job_dags = generate_jobs(
-            self.np_random, self.timeline, self.wall_time)
+        self.job_dags = generate_jobs(self.np_random, self.timeline, self.wall_time)
         # map action to dag_idx and node_idx
         self.action_map = compute_act_map(self.job_dags)
         # add initial set of jobs in the system

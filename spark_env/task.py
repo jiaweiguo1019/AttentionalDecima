@@ -29,21 +29,20 @@ class Task(object):
         self.executor.node = self.node
         self.executor.job_dag = self.node.job_dag
 
-    def get_duration(self):
-        # get task duration lazily
-        if np.isnan(self.start_time):
-            # task not scheduled yet
-            return self.duration
-        elif self.wall_time.curr_time < self.start_time:
-            # task not started yet
-            return self.duration
-        else:
-            # task running or completed
-            duration = max(0,
-                self.finish_time - self.wall_time.curr_time)
-            return duration
-
     def reset(self):
         self.start_time = np.nan
         self.finish_time = np.nan
         self.executor = None
+
+#    def get_duration(self):
+#        # get task duration lazily
+#        if np.isnan(self.start_time):
+#            # task not scheduled yet
+#            return self.duration
+#        elif self.wall_time.curr_time < self.start_time:
+#            # task not started yet
+#            return self.duration
+#        else:
+#            # task running or completed
+#            duration = max(0, self.finish_time - self.wall_time.curr_time)
+#            return duration

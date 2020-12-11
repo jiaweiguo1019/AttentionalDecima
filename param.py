@@ -33,8 +33,7 @@ parser.add_argument('--num_stream_dags_max', type=float, default=500,
                     help='maximum number of number of streaming jobs (default: 500)')
 parser.add_argument('--stream_interval', type=int, default=25000,
                     help='inter job arrival time in milliseconds (default: 25000)')
-parser.add_argument('--executor_data_point', type=int,
-                    default=[5, 10, 20, 40, 50, 60, 80, 100], nargs='+',
+parser.add_argument('--executor_data_point', type=int, default=[2, 5, 10, 20, 40, 50, 60, 80, 100], nargs='+',
                     help='Number of executors used in data collection')
 parser.add_argument('--reward_scale', type=float, default=100000.0,
                     help='scale the reward to some normal values (default: 100000.0)')
