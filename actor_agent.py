@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+from tf_compat import tf
 import bisect
 from param import *
 from utils import *

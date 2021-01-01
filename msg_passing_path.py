@@ -6,7 +6,7 @@ node points at each iteration)
 """
 
 import numpy as np
-import tensorflow as tf
+from tf_compat import tf
 from utils import OrderedSet
 from sparse_op import *
 from param import *

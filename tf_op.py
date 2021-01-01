@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+from tf_compat import tf
 
 
 def expand_act_on_state(state, sub_acts):

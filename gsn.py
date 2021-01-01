@@ -9,7 +9,7 @@ via parameterized aggregation scheme
 
 
 import numpy as np
-import tensorflow as tf
+from tf_compat import tf
 from tf_op import glorot, ones, zeros
 
 

@@ -1,4 +1,4 @@
-import tensorflow as tf
+from tf_compat import tf
 from time import gmtime, strftime
 from param import *
 
