@@ -13,31 +13,163 @@ from compute_baselines import *
 from compute_gradients import *
 from actor_agent import ActorAgent
 from tf_logger import TFLogger
+from spark_env.job_dag import JobDAG
+from spark_env.node import Node
 
 
-def invoke_model(actor_agent, obs, exp):
+from msg_passing_path import Postman, get_unfinished_nodes_summ_mat
+
+
+def translate_state(job_dags, source_job, num_source_exec, exec_commit, moving_executors):
+    """
+    Translate the observation to matrix form.
+    """
+
+    # sort out the exec_map
+    exec_map = {}
+    for job_dag in job_dags:
+        exec_map[job_dag] = len(job_dag.executors)
+
+    # count in moving executors
+    for node in moving_executors.moving_executors.values():
+        exec_map[node.job_dag] += 1
+    # count in executor commit
+    for s in exec_commit.commit:
+        if isinstance(s, JobDAG):
+            j = s
+        elif isinstance(s, Node):
+            j = s.job_dag
+        elif s is None:
+            j = None
+        else:
+            print('source', s, 'unknown')
+            exit(1)
+        for n in exec_commit.commit[s]:
+            if n is not None and n.job_dag != j:
+                exec_map[n.job_dag] += exec_commit.commit[s][n]
+
+    # compute total number of nodes
+    total_num_nodes = int(np.sum(job_dag.num_nodes for job_dag in job_dags))
+
+    # job and node inputs to feed
+    node_inputs = np.zeros([total_num_nodes, args.node_input_dim], dtype=np.float32)
+    job_inputs = np.zeros([len(job_dags), args.job_input_dim], dtype=np.float32)
+
+    # gather inputs
+    node_idx = 0
+    job_idx = 0
+    for job_dag in job_dags:
+        # number of executors in the job
+        job_inputs[job_idx, 0] = exec_map[job_dag] / 20.0
+        # the current executor belongs to this job or not
+        if job_dag is source_job:
+            job_inputs[job_idx, 1] = 2
+        else:
+            job_inputs[job_idx, 1] = -2
+        # number of source executors
+        job_inputs[job_idx, 2] = num_source_exec / 20.0
+        for node in job_dag.nodes:
+            # copy the feature from job_input first
+            node_inputs[node_idx, :3] = job_inputs[job_idx, :3]
+            # work on the node
+            node_inputs[node_idx, 3] = \
+                (node.num_tasks - node.next_task_idx) *  node.tasks[-1].duration / 100000.0
+            # number of tasks left
+            node_inputs[node_idx, 4] = (node.num_tasks - node.next_task_idx) / 200.0
+            #node in-degree
+            node_inputs[node_idx, 5] = len(node.parent_nodes) / 3.0
+            # node out-degree
+            node_inputs[node_idx, 6] = len(node.child_nodes) / 2.0
+            node_idx += 1
+        job_idx += 1
+
+    return node_inputs, job_inputs, exec_map
+
+
+def get_valid_masks(job_dags, frontier_nodes, source_job, num_source_exec, exec_map, action_map):
+
+    executor_levels = range(1, args.exec_cap + 1)
+    job_valid_mask = np.zeros([1, len(job_dags) * len(executor_levels)], dtype=np.float32)
+
+    job_valid = {}  # if job is saturated, don't assign node
+
+    base = 0
+    for job_dag in job_dags:
+        # new executor level depends on the source of executor
+        if job_dag is source_job:
+            least_exec_amount = exec_map[job_dag] - num_source_exec + 1
+            # +1 because we want at least one executor for this job
+        else:
+            least_exec_amount = exec_map[job_dag] + 1
+            # +1 because of the same reason above
+
+        assert least_exec_amount > 0
+        assert least_exec_amount <= executor_levels[-1] + 1
+
+        # find the index for first valid executor limit
+        exec_level_idx = bisect.bisect_left(executor_levels, least_exec_amount)
+
+        if exec_level_idx >= len(executor_levels):
+            job_valid[job_dag] = False
+        else:
+            job_valid[job_dag] = True
+
+        for l in range(exec_level_idx, len(executor_levels)):
+            job_valid_mask[0, base + l] = 1
+
+        base += executor_levels[-1]
+
+    total_num_nodes = int(np.sum(job_dag.num_nodes for job_dag in job_dags))
+
+    node_valid_mask = np.zeros([1, total_num_nodes], dtype=np.float32)
+
+    for node in frontier_nodes:
+        if job_valid[node.job_dag]:
+            act = action_map.inverse_map[node]
+            node_valid_mask[0, act] = 1
+
+    return node_valid_mask, job_valid_mask
+
+
+def invoke_model(actor_agent, postman, obs, exp):
     # parse observation
-    job_dags, source_job, num_source_exec, \
-    frontier_nodes, executor_limits, \
-    exec_commit, moving_executors, action_map = obs
+    job_dags, source_job, num_source_exec, frontier_nodes, exec_commit, moving_executors, action_map = obs
 
     if len(frontier_nodes) == 0:
         # no action to take
         return None, num_source_exec
 
-    # invoking the learning model
-    node_act, job_act, \
-        node_act_probs, job_act_probs, \
-        node_inputs, job_inputs, \
-        node_valid_mask, job_valid_mask, \
-        gcn_mats, gcn_masks, summ_mats, \
-        running_dags_mat, dag_summ_backward_map, \
-        exec_map, job_dags_changed = \
-            actor_agent.invoke_model(obs)
+    # get message passing path (with cache)
+    node_inputs, job_inputs, exec_map = translate_state(
+        job_dags, source_job, num_source_exec, exec_commit, moving_executors
+    )
+
+    # get node and job valid masks
+    node_valid_mask, job_valid_mask = get_valid_masks(
+        job_dags, frontier_nodes, source_job, num_source_exec, exec_map, action_map
+    )
 
     if sum(node_valid_mask[0, :]) == 0:
         # no node is valid to assign
         return None, num_source_exec
+
+    gcn_mats, gcn_masks, dag_summ_backward_map, running_dags_mat, job_dags_changed = \
+        postman.get_msg_path(job_dags)
+        
+    # get summarization path that ignores finished nodes
+    summ_mats = get_unfinished_nodes_summ_mat(job_dags)
+
+    node_act_probs, job_act_probs, node_act, job_act = actor_agent.predict(
+        node_inputs,
+        job_inputs,
+        node_valid_mask,
+        job_valid_mask,
+        gcn_mats,
+        gcn_masks,
+        summ_mats,
+        running_dags_mat,
+        dag_summ_backward_map
+    )
 
     # node_act should be valid
     assert node_valid_mask[0, node_act[0]] == 1
@@ -117,6 +249,8 @@ def train_agent(agent_id, param_queue, reward_queue, adv_queue, gradient_queue):
         args.hid_dims, args.output_dim, args.max_depth,
         range(1, args.exec_cap + 1))
 
+    postman = Postman()
+
     # collect experiences
     while True:
         # get parameters from master
@@ -131,14 +265,22 @@ def train_agent(agent_id, param_queue, reward_queue, adv_queue, gradient_queue):
         env.reset(max_time=max_time)
 
         # set up storage for experience
-        exp = {'node_inputs': [], 'job_inputs': [], \
-               'gcn_mats': [], 'gcn_masks': [], \
-               'summ_mats': [], 'running_dag_mat': [], \
-               'dag_summ_back_mat': [], \
-               'node_act_vec': [], 'job_act_vec': [], \
-               'node_valid_mask': [], 'job_valid_mask': [], \
-               'reward': [], 'wall_time': [],
-               'job_state_change': []}
+        exp = {
+            'node_inputs': [],
+            'job_inputs': [],
+            'gcn_mats': [],
+            'gcn_masks': [],
+            'summ_mats': [],
+            'running_dag_mat': [],
+            'dag_summ_back_mat': [],
+            'node_act_vec': [],
+            'job_act_vec': [],
+            'node_valid_mask': [],
+            'job_valid_mask': [],
+            'reward': [],
+            'wall_time': [],
+            'job_state_change': []
+        }
 
         try:
             # The masking functions (node_valid_mask and
@@ -160,7 +302,7 @@ def train_agent(agent_id, param_queue, reward_queue, adv_queue, gradient_queue):
 
             while not done:
                 
-                node, use_exec = invoke_model(actor_agent, obs, exp)
+                node, use_exec = invoke_model(actor_agent, postman, obs, exp)
 
                 obs, reward, done = env.step(node, use_exec)
 
@@ -269,9 +411,7 @@ def main():
 
     # ---- start training process ----
     for ep in range(1, args.num_ep + 1):
-#
-    # for ep in range(1, args.num_ep):
-#
+
         print('training epoch', ep)
 
         # synchronize the model parameters for each training agent

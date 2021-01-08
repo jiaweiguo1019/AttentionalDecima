@@ -138,27 +138,18 @@ class Environment(object):
 
         return frontier_nodes
 
-    def get_executor_limits(self):
-        # "minimum executor limit" for each job
-        # executor limit := {job_dag -> int}
-        executor_limit = {}
 
-        for job_dag in self.job_dags:
-
-            if self.source_job == job_dag:
-                curr_exec = self.num_source_exec
-            else:
-                curr_exec = 0
-
-            # note: this does not count in the commit and moving executors
-            executor_limit[job_dag] = len(job_dag.executors) - curr_exec
-
-        return executor_limit
 
     def observe(self):
-        return self.job_dags, self.source_job, self.num_source_exec, \
-               self.get_frontier_nodes(), self.get_executor_limits(), \
-               self.exec_commit, self.moving_executors, self.action_map
+        return (
+            self.job_dags,
+            self.source_job,
+            self.num_source_exec,
+            self.get_frontier_nodes(),
+            self.exec_commit,
+            self.moving_executors,
+            self.action_map
+        )
 
     def saturated(self, node):
         # frontier nodes := unsaturated nodes with all parent nodes saturated
@@ -228,9 +219,12 @@ class Environment(object):
 
         # compute number of valid executors to assign
         if next_node is not None:
-            use_exec = min(next_node.num_tasks - next_node.next_task_idx - \
-                           self.exec_commit.node_commit[next_node] - \
-                           self.moving_executors.count(next_node), limit)
+            use_exec = min(
+                next_node.num_tasks - next_node.next_task_idx - \
+                    self.exec_commit.node_commit[next_node] - \
+                    self.moving_executors.count(next_node),
+                limit
+            )
         else:
             use_exec = limit
         assert use_exec > 0
@@ -374,3 +368,20 @@ class Environment(object):
 
     def seed(self, seed):
         self.np_random.seed(seed)
+
+    def get_executor_limits(self):
+        # "minimum executor limit" for each job
+        # executor limit := {job_dag -> int}
+        executor_limit = {}
+
+        for job_dag in self.job_dags:
+
+            if self.source_job == job_dag:
+                curr_exec = self.num_source_exec
+            else:
+                curr_exec = 0
+
+            # note: this does not count in the commit and moving executors
+            executor_limit[job_dag] = len(job_dag.executors) - curr_exec
+
+        return executor_limit

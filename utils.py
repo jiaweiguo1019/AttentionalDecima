@@ -71,26 +71,6 @@ def generate_coin_flips(p):
     return flip_counts
 
 
-def get_outer_product_boolean_mask(job_dags, executor_limits):
-    num_nodes = sum([j.num_nodes for j in job_dags])
-    num_jobs = len(job_dags)
-    num_exec_limits = len(executor_limits)
-    mask = np.zeros([num_nodes, num_jobs * num_exec_limits], dtype=np.bool)
-
-    # fill in valid entries
-    base = 0
-    for i in range(len(job_dags)):
-        job_dag = job_dags[i]
-        mask[base : base + job_dag.num_nodes,
-             i * num_exec_limits : (i + 1) * num_exec_limits] = True
-        base += job_dag.num_nodes
-
-    # reshape into 1D array
-    mask = np.reshape(mask, [-1])
-
-    return mask
-
-
 def get_poly_baseline(polyfit_model, all_wall_time):
     # use 5th order polynomial to get a baseline
     # normalize the time

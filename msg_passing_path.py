@@ -33,9 +33,14 @@ class Postman(object):
             self.running_dag_mat = get_running_dag_mat(job_dags)
             self.job_dags = OrderedSet(job_dags)
 
-        return self.msg_mats, self.msg_masks, \
-               self.dag_summ_backward_map, self.running_dag_mat, \
-               job_dags_changed
+        return (
+            self.msg_mats,
+            self.msg_masks,
+            self.dag_summ_backward_map,
+            self.running_dag_mat,
+            job_dags_changed
+        )
+
 
     def reset(self):
         self.job_dags = OrderedSet()
