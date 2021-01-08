@@ -8,7 +8,7 @@ this work is inspired by [Decima](https://web.mit.edu/decima) (SIGCOMM '19)
 
 The script has been tested running under Python 3.6, with the following packages installed (along with their dependencies):
 
-- `numpy==1.16`
+- `numpy==1.18`
 - `networkx==2.4`
 - `tensorflow-gpu==1.15`
 

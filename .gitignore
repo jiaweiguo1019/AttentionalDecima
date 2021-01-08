@@ -1,7 +1,7 @@
 # ignore models and some misc data 
 models/
-spark_env/tpch/dag_visualization/
-spark_env/tpch/task_durations/
+dag_visualization/
+task_durations/
 
 # ignore mac cache
 *.DS_Store
@@ -138,3 +138,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.ipynb*
